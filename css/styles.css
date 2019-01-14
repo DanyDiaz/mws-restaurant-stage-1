@@ -177,7 +177,7 @@ nav h1 {
   display: block;
   margin: 0;
   max-width: 100%;
-  min-height: 248px;
+  min-height: 150px;
   min-width: 100%;
 }
 #restaurants-list li h3 {
@@ -336,6 +336,9 @@ nav h1 {
   }
   .filter-options h2 {
     font-size: 1.5em;
+  }
+  #restaurants-list .restaurant-img {
+    min-height: 248px;
   }
   #restaurants-list li h3 {
     font-size: 14pt;

@@ -77,6 +77,16 @@ fetchRestaurantFromURL = (callback) => {
 }
 
 /**
+  * Create sources for a picture
+  */
+createSources = (sourceInfo) => {
+  const source = document.createElement('source');
+  source.media = sourceInfo.media;
+  source.srcset = sourceInfo.srcset;
+  return source;
+}
+
+/**
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
@@ -86,9 +96,15 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
+  const picture = document.getElementById('restaurant-picture');
+  restaurant.sources.forEach(sourceInfo => {
+    picture.append(createSources(sourceInfo));
+  })
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.remove();
+  picture.append(image);
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
