@@ -86,6 +86,8 @@ initMap = () => {
     id: 'mapbox.streets'
   }).addTo(newMap);
 
+  changeKeyboardBehaviorForMap();
+
   updateRestaurants();
 }
 /* window.initMap = () => {
@@ -100,6 +102,15 @@ initMap = () => {
   });
   updateRestaurants();
 } */
+
+/**
+  * Improve keyboard handling for the leaflet map
+  */
+changeKeyboardBehaviorForMap = () => {
+  //Remove key handling for map div
+  const map = document.getElementById('map');
+  map.setAttribute('tabindex', '-1');
+}
 
 /**
  * Update page and map for current restaurants.
@@ -206,6 +217,12 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     marker.on("click", onClick);
     function onClick() {
       window.location.href = marker.options.url;
+    }
+    marker.on("keypress", onKeyPressed);
+    function onKeyPressed(e) {
+      if(e.originalEvent.key === "Enter") {
+        onClick();
+      }
     }
     self.markers.push(marker);
   });

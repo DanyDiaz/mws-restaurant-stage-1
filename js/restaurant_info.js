@@ -29,6 +29,7 @@ initMap = () => {
           'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         id: 'mapbox.streets'
       }).addTo(newMap);
+      changeKeyboardBehaviorForMap();
       fillBreadcrumb();
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.newMap);
     }
@@ -50,6 +51,15 @@ initMap = () => {
     }
   });
 } */
+
+/**
+  * Improve keyboard handling for the leaflet map
+  */
+changeKeyboardBehaviorForMap = () => {
+  //Remove key handling for map div
+  const map = document.getElementById('map');
+  map.setAttribute('tabindex', '-1');
+}
 
 /**
  * Get current restaurant from page URL.

@@ -34,7 +34,15 @@ a {
 	text-decoration: none;
 }
 a:hover, a:focus {
-	color: #3397db;
+	outline: 0;
+  box-shadow: 0 0 5px 3px #3397db;
+	text-decoration: none;
+}
+img.leaflet-marker-icon:hover, img.leaflet-marker-icon:focus,
+#map a:focus,  #map a:hover, .filter-options select:focus,
+.filter-options select:hover {
+	outline: 0;
+  box-shadow: 0 0 5px 3px #f18200;
 	text-decoration: none;
 }
 a img{
