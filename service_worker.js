@@ -67,7 +67,19 @@ self.addEventListener('fetch', function(event) {
   //Check if the file requested exists in the cache first
   event.respondWith(
     caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
+      if(response) {
+        return response;
+      }
+      else {
+        return fetch(event.request)
+            .then(function(res) {
+              return res;
+            })
+            .catch(function(err) {
+              console.log('error while fetching: ' + event.request.url);
+              return;
+            });
+      }
     })
   );
 });
