@@ -161,6 +161,18 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
     ul.append(createRestaurantHTML(restaurant));
   });
   addMarkersToMap();
+  addRolesToMarkers();
+}
+
+/**
+  * Add ARIA roles to map markers
+  */
+addRolesToMarkers = () => {
+  var mapImages = document.getElementsByClassName("leaflet-marker-icon");
+  var i;
+  for (i = 0; i < mapImages.length; i++) {
+    mapImages[i].setAttribute("role", "link");
+  }
 }
 
 /**
@@ -184,6 +196,7 @@ createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   image.className = 'restaurant-img';
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.alt = restaurant.photographDescription;
   picture.append(image);
   li.append(picture);
 
@@ -202,6 +215,8 @@ createRestaurantHTML = (restaurant) => {
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
+  more.setAttribute('aria-label', 'View details for ' + restaurant.name +
+        ' restaurant');
   li.append(more)
 
   return li
