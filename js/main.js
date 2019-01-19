@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   initMap(); // added
   fetchNeighborhoods();
   fetchCuisines();
+  registerServiceWorker();
 });
 
 /**
@@ -253,3 +254,19 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 } */
+
+/**
+ * It will register the service worker that will cache all the assets of the
+ * site.
+ */
+registerServiceWorker = () => {
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.register('/service_worker.js')
+    .then(function(reg) {
+      console.log('Service worker registered successfully');
+    })
+    .catch(function(error) {
+      console.log('Error registering service worker');
+    });
+  }
+}
