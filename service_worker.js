@@ -64,9 +64,16 @@ self.addEventListener('activate', function(event) {
  * Handling site requests in the fetch event
  */
 self.addEventListener('fetch', function(event) {
+  var requestUrl = new URL(event.request.url);
+  var ignoreQueryParameters = false;
+  if(requestUrl.origin === location.origin &&
+    requestUrl.pathname === "/restaurant.html") {
+      ignoreQueryParameters = true;
+    }
   //Check if the file requested exists in the cache first
   event.respondWith(
-    caches.match(event.request).then(function(response) {
+    caches.match(event.request, {ignoreSearch: ignoreQueryParameters})
+    .then(function(response) {
       if(response) {
         return response;
       }
