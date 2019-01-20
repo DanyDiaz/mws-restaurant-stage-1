@@ -196,7 +196,7 @@ nav h1 {
   min-height: 150px;
   min-width: 100%;
 }
-#restaurants-list li h4 {
+#restaurants-list li h3 {
   color: #f18200;
   font-family: Arial,sans-serif;
   font-size: 11pt;
@@ -338,7 +338,7 @@ nav h1 {
 		letter-spacing: 5px;
   }
 
-  #restaurants-list li h4 {
+  #restaurants-list li h3 {
     font-size: 12.5pt;
   }
 }
@@ -356,7 +356,7 @@ nav h1 {
   #restaurants-list .restaurant-img {
     min-height: 248px;
   }
-  #restaurants-list li h4 {
+  #restaurants-list li h3 {
     font-size: 14pt;
   }
   #restaurants-list {
@@ -404,7 +404,7 @@ nav h1 {
     margin: 0 20px 20px;
     padding: 20px;
   }
-  #restaurants-list li h4 {
+  #restaurants-list li h3 {
     font-size: 17pt;
   }
   #restaurants-list .restaurant-img {

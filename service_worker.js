@@ -27,8 +27,7 @@ var filesToCache = [
   'js/dbhelper.js',
   'js/main.js',
   'js/restaurant_info.js',
-  'index.html',
-  'restaurant.html'
+  '/restaurant.html'
 ];
 
 /*
@@ -77,7 +76,7 @@ self.addEventListener('fetch', function(event) {
               return res;
             })
             .catch(function(err) {
-              console.log('error while fetching: ' + event.request.url);
+              console.log('error while fetching:' + event.request.url);
               return;
             });
       }
