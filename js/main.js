@@ -263,7 +263,7 @@ registerServiceWorker = () => {
   if (navigator.serviceWorker) {
     navigator.serviceWorker.register('/service_worker.js')
     .then(function(reg) {
-      console.log('Service worker registered successfully');
+      console.log('ServiceWorker registration successful with scope: ', reg.scope);
     })
     .catch(function(error) {
       console.log('Error registering service worker');

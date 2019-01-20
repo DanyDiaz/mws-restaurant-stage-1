@@ -24,7 +24,7 @@ body {
 	flex-wrap: wrap;
 }
 
-ul, li {
+ol, ul, li {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 	color: #333;
@@ -37,6 +37,9 @@ a:hover, a:focus {
 	outline: 0;
   box-shadow: 0 0 5px 3px #3397db;
 	text-decoration: none;
+}
+#breadcrumb li a[aria-current="page"] {
+  color: #333;
 }
 img.leaflet-marker-icon:hover, img.leaflet-marker-icon:focus,
 #map a:focus,  #map a:hover, .filter-options select:focus,
@@ -86,6 +89,12 @@ nav {
   background-color: #252831;
   text-align:center;
 }
+.inside nav {
+  height: auto;
+}
+.inside nav ol {
+  text-align: left;
+}
 nav h1 {
   margin: auto;
 	color: #fff;
@@ -102,7 +111,6 @@ nav h1 {
     background-color: #eee;
     font-size: 17px;
     margin: 0;
-    width: 100%;
 }
 
 /* Display list items side by side */
@@ -188,7 +196,7 @@ nav h1 {
   min-height: 150px;
   min-width: 100%;
 }
-#restaurants-list li h3 {
+#restaurants-list li h4 {
   color: #f18200;
   font-family: Arial,sans-serif;
   font-size: 11pt;
@@ -279,7 +287,7 @@ nav h1 {
   overflow-x: auto;
 }
 
-#reviews-container h2 {
+#reviews-container h3 {
   color: #f58500;
   font-size: 18pt;
   font-weight: 300;
@@ -314,7 +322,7 @@ nav h1 {
   color: #fff;
   border-radius: 5px;
 }
-#reviews-list li h3 {
+#reviews-list li h4 {
   padding: 0;
   color: #fff;
 }
@@ -330,7 +338,7 @@ nav h1 {
 		letter-spacing: 5px;
   }
 
-  #restaurants-list li h3 {
+  #restaurants-list li h4 {
     font-size: 12.5pt;
   }
 }
@@ -348,7 +356,7 @@ nav h1 {
   #restaurants-list .restaurant-img {
     min-height: 248px;
   }
-  #restaurants-list li h3 {
+  #restaurants-list li h4 {
     font-size: 14pt;
   }
   #restaurants-list {
@@ -358,7 +366,7 @@ nav h1 {
     margin: 0 10px 20px;
     padding: 20px 10px;
   }
-  #reviews-list li h3 {
+  #reviews-list li h4 {
     font-size: 15pt;
   }
   #footer {
@@ -396,7 +404,7 @@ nav h1 {
     margin: 0 20px 20px;
     padding: 20px;
   }
-  #restaurants-list li h3 {
+  #restaurants-list li h4 {
     font-size: 17pt;
   }
   #restaurants-list .restaurant-img {
@@ -462,8 +470,8 @@ nav h1 {
   }
 }
 
-@media screen and (min-width: 1000px) {
-  body {
+@media screen and (min-width: 1025px) {
+  body, .inside {
     width: 1000px;
     margin-left: auto;
     margin-right: auto;

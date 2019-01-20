@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <!--Manage the viewport dimensions -->
@@ -19,11 +19,13 @@
     <nav>
       <h1><a href="/">Restaurant Reviews</a></h1>
     </nav>
-    <!-- Beginning breadcrumb -->
-    <ul id="breadcrumb" >
-      <li><a href="/">Home</a></li>
-    </ul>
-    <!-- End breadcrumb -->
+    <nav role="navigation" aria-label="breadcrumb">
+      <!-- Beginning breadcrumb -->
+      <ol id="breadcrumb">
+        <li><a href="/">Home</a></li>
+      </ol>
+      <!-- End breadcrumb -->
+    </nav>
     <!-- End nav -->
   </header>
   <!-- End header -->
@@ -33,7 +35,7 @@
     <!-- Beginning map -->
     <section id="map-container">
       <h2>Restaurant location</h2>
-      <div id="map"></div>
+      <div id="map" aria-label="restaurant location in a map" role="application"></div>
     </section>
     <!-- End map -->
     <div id="restaurant-sections" class="flex-container">
