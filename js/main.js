@@ -8,6 +8,7 @@ var markers = []
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initIndexedDB();
   initMap(); // added
   fetchNeighborhoods();
   fetchCuisines();
@@ -269,4 +270,11 @@ registerServiceWorker = () => {
       console.log('Error registering service worker');
     });
   }
+}
+
+/**
+ * It will open a new database in indexed db
+ */
+initIndexedDB = () => {
+  IndexedDatabase.openAndConfigureDatabase();
 }

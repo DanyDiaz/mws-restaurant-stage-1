@@ -5,6 +5,7 @@ var newMap;
  * Initialize map as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initIndexedDB();
   initMap();
 });
 
@@ -222,4 +223,11 @@ getParameterByName = (name, url) => {
   if (!results[2])
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+/**
+ * It will open a new database in indexed db
+ */
+initIndexedDB = () => {
+  IndexedDatabase.openAndConfigureDatabase();
 }

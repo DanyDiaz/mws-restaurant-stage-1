@@ -1,3 +1,95 @@
+let restaurantsdb;
+class IndexedDatabase {
+  /**
+   * Database name.
+   */
+  static get databaseName() { return 'restaurantApp' }
+  /**
+   * Current data base version.
+   */
+  static get currentDbVersion() { return 1 }
+  /**
+   * ObjectStore for restaurants.
+   */
+  static get restaurantsObjectStoreName() { return 'restaurants' }
+
+  /**
+   * Get all the restaurant information from IndexedDb
+   */
+  static getRestaurantsInformation() {
+    if(!restaurantsdb) return Promise.resolve(null);
+    
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.restaurantsObjectStoreName, 'readonly')
+                .objectStore(IndexedDatabase.restaurantsObjectStoreName);
+
+        let request = store.getAll();
+        request.onsuccess = function(event) {
+          resolve(event.target.result);
+        }
+
+        request.onerror = function() {
+          reject('Error counting messages in objectStore: ' + 
+            IndexedDatabase.restaurantsObjectStoreName);
+        }
+      });
+    });
+  }
+
+  /**
+   * It will add information to restaurants object store that was fetched from another server
+   * @param {Restaurants information to add to IndexedDB} restaurants 
+   */
+  static pushRestaurantsInformation(restaurants) {
+    if(!restaurantsdb) return;
+    restaurantsdb.then(function(db) {
+      let store = db.transaction(IndexedDatabase.restaurantsObjectStoreName, 'readwrite')
+                    .objectStore(IndexedDatabase.restaurantsObjectStoreName);
+      for(let restaurant of restaurants) {
+        store.put(restaurant);
+      }
+    });
+  }
+
+  /**
+  * Open and Configure the database
+  */
+  static openAndConfigureDatabase() {
+    restaurantsdb = this.openIndexedDatabase(IndexedDatabase.databaseName, 
+      IndexedDatabase.currentDbVersion, function(upgradeDb) {
+     upgradeDb.createObjectStore(IndexedDatabase.restaurantsObjectStoreName, {
+       keyPath: 'id'
+     });
+   })
+  }
+
+  /**
+  * Opens a database in IndexedDb and gives a javascript promise interface to
+  * handle the database later
+  */
+  static openIndexedDatabase(name, version, callbackFunction) {
+   if(!window.indexedDB)
+       return Promise.resolve(null);
+ 
+    return new Promise(function(resolve, reject) {
+      let request = indexedDB.open(name, version);
+        
+      request.onerror = function(error) {
+        reject('Error at opening database: ' + name + ', error: ' + error);
+      }
+
+      request.onupgradeneeded = function(event) {
+        callbackFunction(event.target.result);
+      }
+
+      request.onsuccess = function() {
+        resolve(this.result);
+      }
+    });
+  }
+}
+
 /**
  * Common database helper functions.
  */
@@ -16,19 +108,28 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.DATABASE_URL)
-      .then(function(response) {
-        if(!response.ok)
-          throw Error(response.statusText);
-        return response.json();
-      })
-      .then(function(restaurants) {
-        callback(null, restaurants);        
-      })
-      .catch(function(errorStatus) {
-        const error = (`Request failed. Returned status of ${errorStatus}`);
-        callback(error, null);
-      })
+    IndexedDatabase.getRestaurantsInformation()
+    .then(function(data) {
+      if(!data || data.length <= 0) {
+        fetch(DBHelper.DATABASE_URL)
+          .then(function(response) {
+            if(!response.ok)
+              throw Error(response.statusText);
+            return response.json();
+          })
+          .then(function(restaurants) {
+            callback(null, restaurants);
+            IndexedDatabase.pushRestaurantsInformation(restaurants);        
+          })
+          .catch(function(errorStatus) {
+            const error = (`Request failed. Returned status of ${errorStatus}`);
+            callback(error, null);
+        });
+      }
+      else {
+        callback(null, data);
+      }
+    });
   }
 
   /**
