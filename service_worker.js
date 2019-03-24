@@ -4,7 +4,6 @@ var cacheName = 'restaurant-reviews-v1';
 var filesToCache = [
   '/',
   'css/styles.css',
-  'data/restaurants.json',
   'img/1_normal_1x.jpg', 'img/1_normal_2x.jpg', 'img/1_medium_1x.jpg',
   'img/1_medium_2x.jpg', 'img/1_small_1x.jpg', 'img/1_small_2x.jpg',
   'img/2_normal_1x.jpg', 'img/2_normal_2x.jpg',
