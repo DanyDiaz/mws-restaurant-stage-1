@@ -7,6 +7,7 @@ var newMap;
 document.addEventListener('DOMContentLoaded', (event) => {
   initIndexedDB();
   initMap();
+  registerServiceWorker();
 });
 
 /**
@@ -225,6 +226,21 @@ getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
+/**
+ * It will register the service worker that will cache all the assets of the
+ * site.
+ */
+registerServiceWorker = () => {
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.register('/service_worker.js')
+    .then(function(reg) {
+      console.log('ServiceWorker registration successful with scope: ', reg.scope);
+    })
+    .catch(function(error) {
+      console.log('Error registering service worker');
+    });
+  }
+}
 /**
  * It will open a new database in indexed db
  */
