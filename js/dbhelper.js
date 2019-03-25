@@ -108,27 +108,28 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    IndexedDatabase.getRestaurantsInformation()
-    .then(function(data) {
-      if(!data || data.length <= 0) {
-        fetch(DBHelper.DATABASE_URL)
-          .then(function(response) {
-            if(!response.ok)
-              throw Error(response.statusText);
-            return response.json();
-          })
-          .then(function(restaurants) {
-            callback(null, restaurants);
-            IndexedDatabase.pushRestaurantsInformation(restaurants);        
-          })
-          .catch(function(errorStatus) {
+    fetch(DBHelper.DATABASE_URL)
+      .then(function(response) {
+        if(!response.ok)
+          throw Error(response.statusText);
+        return response.json();
+      })
+      .then(function(restaurants) {
+        callback(null, restaurants);
+        IndexedDatabase.pushRestaurantsInformation(restaurants);        
+      })
+      .catch(function(errorStatus) {
+        //If there was an error fetching data from server, it will be fetched from IndexedDB
+        IndexedDatabase.getRestaurantsInformation()
+        .then(function(data) {
+          if(!data || data.length <= 0) {
             const error = (`Request failed. Returned status of ${errorStatus}`);
             callback(error, null);
+          }
+          else {
+            callback(null, data);
+          }
         });
-      }
-      else {
-        callback(null, data);
-      }
     });
   }
 
