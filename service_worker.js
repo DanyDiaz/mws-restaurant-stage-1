@@ -23,10 +23,13 @@ var filesToCache = [
   'img/9_medium_2x.jpg',
   'img/10_normal_1x.jpg', 'img/10_normal_2x.jpg', 'img/10_medium_1x.jpg',
   'img/10_medium_2x.jpg', 'img/10_small_1x.jpg', 'img/10_small_2x.jpg',
+  'img/silverware-1x.png', 'img/silverware-2x.png', 'img/silverware-3x.png',
+  'img/silverware-4x.png', 'img/silverware-5x.png',
   'js/dbhelper.js',
   'js/main.js',
   'js/restaurant_info.js',
-  '/restaurant.html'
+  '/restaurant.html',
+  '/manifest.json'
 ];
 
 /*
