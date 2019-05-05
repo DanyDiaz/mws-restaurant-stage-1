@@ -42,8 +42,8 @@ a:hover, a:focus {
   color: #333;
 }
 img.leaflet-marker-icon:hover, img.leaflet-marker-icon:focus,
-#map a:focus,  #map a:hover, .filter-options select:focus,
-.filter-options select:hover {
+#map a:focus,  #map a:hover, .filter-options div select:focus,
+.filter-options div select:hover {
 	outline: 0;
   box-shadow: 0 0 5px 3px #f18200;
 	text-decoration: none;
@@ -60,12 +60,6 @@ h1, h2, h3, h4, h5, h6 {
 header {
 	width: 100%;
 }
-
-/*
-article, aside, canvas, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
-	display: block;
-}
-*/
 
 #maincontent {
   background-color: #f3f3f3;
@@ -138,6 +132,10 @@ nav h1 {
     text-decoration: underline;
 }
 /* ====================== Map ====================== */
+#map-container {
+  padding-right: 2%;
+  padding-left: 2%;
+}
 #map {
   height: 400px;
 	width: 100%;
@@ -146,19 +144,24 @@ nav h1 {
 }
 /* ====================== Restaurant Filtering ====================== */
 .filter-options {
+  width: 96%;
+  padding-right:2%;
+  padding-left:2%;
+}
+.filter-options div {
   width: 100%;
   background-color: #2571a5;
   align-items: center;
 	overflow-x: auto;
 }
-.filter-options h2 {
+.filter-options div h2 {
   color: white;
   font-size: 1.3em;
   font-weight: normal;
   line-height: 1;
 	padding-top: 1em;
 }
-.filter-options select {
+.filter-options div select {
   background-color: white;
   border: 1px solid #fff;
   font-family: Arial,sans-serif;
@@ -278,7 +281,7 @@ nav h1 {
   width: 100%;
 }
 #restaurant-container, #reviews-container {
-  border-top: 1px solid #fff;
+  border-top: 2px solid #000;
   width: 100%;
 }
 
@@ -305,15 +308,16 @@ nav h1 {
   display: block;
   list-style-type: none;
   margin: 10px;
-  padding: 20px;
-  border-radius: 30px;
+  padding: 10px;
+  border-radius: 20px;
   min-width: 120px;
 }
 #reviews-list li p {
-  margin: 0 0 10px;
+  margin: 0 0 5px;
 }
 #reviews-list li p:nth-child(2) {
   color: #fff;
+  margin-bottom: 20px;
 }
 #reviews-list li p:nth-child(3) {
   background-color: #f18200;
@@ -350,7 +354,7 @@ nav h1 {
 		font-size: 15pt;
 		letter-spacing: 10px;
   }
-  .filter-options h2 {
+  .filter-options div h2 {
     font-size: 1.5em;
   }
   #restaurants-list .restaurant-img {
@@ -369,6 +373,9 @@ nav h1 {
   #reviews-list li h4 {
     font-size: 15pt;
   }
+  /*#reviews-list li p:nth-child(4) {
+    font-size: 11pt;
+  }*/
   #footer {
     padding: 25px;
   }
@@ -458,7 +465,7 @@ nav h1 {
   }
 
   .inside #map-container {
-    width: 50%;
+    width: 46%;
     min-height: 100%;
     max-height: 100%;
     order:2;
