@@ -12,6 +12,11 @@ class IndexedDatabase {
    * ObjectStore for restaurants.
    */
   static get restaurantsObjectStoreName() { return 'restaurants' }
+  /**
+   * ObjectStore for reviews.
+   */
+  static get reviewsObjectStoreName() { return 'reviews' }
+
 
   /**
    * Get all the restaurant information from IndexedDb
@@ -30,8 +35,31 @@ class IndexedDatabase {
         }
 
         request.onerror = function() {
-          reject('Error counting messages in objectStore: ' + 
-            IndexedDatabase.restaurantsObjectStoreName);
+          reject('Error getting restaurants information from IndexedDB');
+        }
+      });
+    });
+  }
+
+  /**
+   * Get all the reviews information from IndexedDb
+   */
+  static getReviewsInformation(id) {
+    if(!restaurantsdb) return Promise.resolve(null);
+    
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.reviewsObjectStoreName, 'readonly')
+                .objectStore(IndexedDatabase.reviewsObjectStoreName);
+        let restaurantIndex = store.index('restaurant_id')
+
+        let request = restaurantIndex.getAll(parseInt(id));
+        request.onsuccess = function(event) {
+          resolve(event.target.result);
+        }
+
+        request.onerror = function() {
+          reject('Error getting reviews information from IndexedDB');
         }
       });
     });
@@ -53,15 +81,36 @@ class IndexedDatabase {
   }
 
   /**
+   * It will add information to reviews object store that was fetched from another server
+   * @param {Reviews information to add to IndexedDB} reviews 
+   */
+  static pushReviewsInformation(reviews) {
+    if(!restaurantsdb) return;
+    restaurantsdb.then(function(db) {
+      let store = db.transaction(IndexedDatabase.reviewsObjectStoreName, 'readwrite')
+                    .objectStore(IndexedDatabase.reviewsObjectStoreName);
+      for(let review of reviews) {
+        store.put(review);
+      }
+    });
+  }
+
+  /**
   * Open and Configure the database
   */
   static openAndConfigureDatabase() {
     restaurantsdb = this.openIndexedDatabase(IndexedDatabase.databaseName, 
       IndexedDatabase.currentDbVersion, function(upgradeDb) {
-     upgradeDb.createObjectStore(IndexedDatabase.restaurantsObjectStoreName, {
-       keyPath: 'id'
-     });
-   })
+        upgradeDb.createObjectStore(IndexedDatabase.restaurantsObjectStoreName, {
+          keyPath: 'id'
+        });
+
+        let reviewsStore = upgradeDb.createObjectStore(IndexedDatabase.reviewsObjectStoreName, {
+          keyPath: 'id'
+        });
+
+        reviewsStore.createIndex('restaurant_id', 'restaurant_id');
+      });
   }
 
   /**
@@ -97,18 +146,31 @@ class DBHelper {
 
   /**
    * Database URL.
-   * Change this to restaurants.json file location on your server.
    */
   static get DATABASE_URL() {
     const port = 1337;
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}/`;
+  }
+
+  /**
+   * URL for restaurants.
+   */
+  static get RESTAURANTS_PATH() {
+    return DBHelper.DATABASE_URL + 'restaurants';
+  }
+  
+  /**
+   * URL for reviews.
+   */
+  static get REVIEWS_PATH() {
+    return DBHelper.DATABASE_URL + 'reviews';
   }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.DATABASE_URL)
+    fetch(DBHelper.RESTAURANTS_PATH)
       .then(function(response) {
         if(!response.ok)
           throw Error(response.statusText);
@@ -137,19 +199,87 @@ class DBHelper {
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id, callback) {
-    // fetch all restaurants with proper error handling.
-    DBHelper.fetchRestaurants((error, restaurants) => {
-      if (error) {
-        callback(error, null);
-      } else {
-        const restaurant = restaurants.find(r => r.id == id);
-        if (restaurant) { // Got the restaurant
-          callback(null, restaurant);
-        } else { // Restaurant does not exist in the database
-          callback('Restaurant does not exist', null);
+    //first fetch possible reviews for that restaurant
+    DBHelper.fetchReviewsByRestaurant(id)
+    .then(function(reviews) {
+      //then fetch for the restaurant information
+      fetch(DBHelper.RESTAURANTS_PATH + '/' + id)
+      .then(function(response) {
+        if(!response.ok)
+          throw Error(response.statusText);
+        return response.json();
+      })
+      .then(function(restaurant) {
+        if(reviews) {
+          restaurant.reviews = reviews;
         }
-      }
+        callback(null, restaurant);
+      })
+      .catch(function(errorStatus) {
+        //If there was an error fetching the restaurant from server, it will be fetched from IndexedDB
+        IndexedDatabase.getRestaurantsInformation()
+        .then(function(data) {
+          if(!data || data.length <= 0) {
+            const error = (`Request failed. Returned status of ${errorStatus}`);
+            callback(error, null);
+          }
+          else {
+            const restaurant = data.find(r => r.id == id); 
+            if(restaurant) {
+              if(reviews) {
+                restaurant.reviews = reviews;
+              }
+              callback(null, restaurant);
+            }
+            else {
+              callback('Restaurant does not exist', null);
+            }
+          }
+        });
+        });
     });
+  }
+
+  /**
+   * Fetch reviews by RestaurantId
+   */
+  static fetchReviewsByRestaurant(id) {
+    return fetch(DBHelper.REVIEWS_PATH + '/?restaurant_id=' + id)
+      .then(function(response) {
+        if(!response.ok)
+          throw Error(response.statusText);
+        return response.json();
+      })
+      .then(function(reviews) {
+        IndexedDatabase.pushReviewsInformation(reviews);
+        return reviews;
+      })
+      .catch(function(errorStatus) {
+        //If there was an error fetching data from server, it will be fetched from IndexedDB
+        return IndexedDatabase.getReviewsInformation(id)
+        .then(function(data) {
+          if(!data || data.length <= 0) {
+            return null;
+          }
+          else {
+            return data;
+          }
+        });
+    });
+  }
+
+  /**
+   * Fetch reviews
+   */
+  static fetchReviews() {
+    fetch(DBHelper.REVIEWS_PATH)
+      .then(function(response) {
+        if(response.ok)
+          return response.json();
+      })
+      .then(function(reviews) {
+        IndexedDatabase.pushReviewsInformation(reviews);
+      });
   }
 
   /**

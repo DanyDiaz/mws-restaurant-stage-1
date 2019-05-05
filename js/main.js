@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchNeighborhoods();
   fetchCuisines();
   registerServiceWorker();
+  fetchAndSaveReviews();
 });
 
 /**
@@ -277,4 +278,11 @@ registerServiceWorker = () => {
  */
 initIndexedDB = () => {
   IndexedDatabase.openAndConfigureDatabase();
+}
+
+/**
+ * It will fetch restaurant reviews and save it to indexedDB
+ */
+fetchAndSaveReviews = () => {
+  DBHelper.fetchReviews();
 }
