@@ -8,7 +8,81 @@ document.addEventListener('DOMContentLoaded', (event) => {
   initIndexedDB();
   initMap();
   registerServiceWorker();
+  addEventsForElements();
 });
+
+/**
+ * Defines several events for the html elements
+ */
+addEventsForElements = () => {
+  let sendButton = document.getElementById('butSend');
+  let txtName = document.getElementById('txtUserName');
+  let txtComment = document.getElementById('txtComment');
+  let lblName = document.getElementById('lblEnterName');
+  let lblComment = document.getElementById('lblEnterComment');
+  let selRating = document.getElementById('sRating');
+
+  //Add keyup event for name text
+  if(txtName) {
+    txtName.addEventListener('keyup', function(event) {
+      if(lblName.style.display == 'inline-block' 
+        && txtName.value.trim().length > 0) {
+        lblName.style.display = 'none';
+      }
+      this.value = this.value.replace(/[^a-záA-Z0-9 ]/g, '');
+    });
+  }
+  //Add keyup event for comment textarea
+  if(txtComment) {
+    txtComment.addEventListener('keyup', function(event) {
+      if(lblComment.style.display == 'inline-block' 
+        && txtComment.value.trim().length > 0) {
+        lblComment.style.display = 'none';
+      }
+    });
+  }
+  //Add click event for submit button
+  if(sendButton) {
+    sendButton.addEventListener('click', function() {
+      let restaurantId = getParameterByName('id');
+      if(areFieldsValid(txtName,txtComment,lblName, lblComment)) {
+        const ul = document.getElementById('reviews-list');
+        DBHelper.sendReview(txtName,txtComment,selRating, restaurantId)
+        .then(function(review) {
+          //Clear data
+          txtName.value = '';
+          txtComment.value = '';
+          txtName.focus();
+          //Add review locally
+          ul.appendChild(createReviewHTML(review));
+        });
+      }
+    });
+  }
+}
+
+/**
+ * Validates if the name and comment fields in the review were filled up properly
+ */
+areFieldsValid = (txtName,txtComment,lblName, lblComment) => {
+  lblName.style.display = 'none';
+  if(txtName.value.trim() === '') {
+    txtName.value = '';
+    lblName.style.display = 'inline-block';
+    txtName.focus();
+    return false;
+  }
+
+  lblComment.style.display = 'none';
+  if(txtComment.value.trim() === '') {
+    txtComment.value = '';
+    lblComment.style.display = 'inline-block';
+    txtComment.focus();
+    return false;
+  }
+
+  return true;
+}
 
 /**
  * Initialize leaflet map
@@ -155,10 +229,6 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
-  const title = document.createElement('h3');
-  title.innerHTML = 'Reviews';
-  container.appendChild(title);
-
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';

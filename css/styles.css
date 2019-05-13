@@ -33,7 +33,9 @@ a {
 	color: #f18200;
 	text-decoration: none;
 }
-a:hover, a:focus {
+a:hover, a:focus, input:hover, input:focus, textarea:hover,
+textarea:focus, #reviews-form select:hover, 
+#reviews-form select:focus {
 	outline: 0;
   box-shadow: 0 0 5px 3px #3397db;
 	text-decoration: none;
@@ -214,7 +216,7 @@ nav h1 {
   margin: 0 10px;
   font-size: 11pt;
 }
-#restaurants-list li a {
+#restaurants-list li a, input[type="submit"] {
   background-color: #f18200;
   border-bottom: 3px solid #eee;
   color: #ffffff;
@@ -280,7 +282,8 @@ nav h1 {
 #restaurant-sections {
   width: 100%;
 }
-#restaurant-container, #reviews-container {
+#restaurant-container, #reviews-container,
+#reviews-form {
   border-top: 2px solid #000;
   width: 100%;
 }
@@ -290,12 +293,50 @@ nav h1 {
   overflow-x: auto;
 }
 
-#reviews-container h3 {
+#reviews-container h3, #reviews-form h3 {
   color: #f58500;
   font-size: 18pt;
   font-weight: 300;
   letter-spacing: -1px;
   padding-bottom: 1pt;
+}
+#reviews-container p, #reviews-form label {
+  padding-left: 0.75em;
+}
+#reviews-form h3 {
+  padding-bottom: 0.5em;
+}
+#reviews-form label {
+  display: inline-block;
+  min-width: 18%;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+#reviews-form label.missing-data {
+  width: 100%;
+  background-color: #cf4847;
+  color: white;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0.4em;
+  border-radius: 4px;
+  display: none;
+}
+#reviews-form input[type="text"] {
+  margin-left: 0.75em;
+  display: inline-block;
+  max-width: calc(100% - 2em);
+}
+#reviews-form select {
+  margin-left: 0.75em;
+}
+#reviews-form textarea {
+  margin-left: 0.75em;
+  display: block;
+  width: calc(100% - 2em);
+  min-height: 100px;
+  resize:none;
+  overflow-y: auto;
 }
 #reviews-list {
   margin: 0;

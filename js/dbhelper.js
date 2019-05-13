@@ -283,6 +283,64 @@ class DBHelper {
   }
 
   /**
+   * It will escape html characters
+   */
+  static escapeHtml(text) {
+    return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+  }
+
+  /**
+   * It will create the fetch post request to send the review,
+   * and will add the review locally
+   */
+  static sendReview(txtName,txtComment,selRating, restaurantId) {
+    let data = {
+      'restaurant_id': parseInt(restaurantId),
+      'name': txtName.value,
+      'rating': selRating.value,
+      'comments': DBHelper.escapeHtml(txtComment.value)
+    };
+
+    return fetch(DBHelper.REVIEWS_PATH, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(function(response) {
+      if(!response.ok)
+          throw Error(response.statusText);
+        return {
+          'name': txtName.value,
+          'updatedAt': Date.now(),
+          'rating': parseInt(selRating.value),
+          'comments': DBHelper.escapeHtml(txtComment.value)
+        };
+    })
+    .then(function(review) {
+      //Get again the reviews from the restaurant to update new review
+      DBHelper.fetchReviewsByRestaurant(restaurantId);
+      return review;
+    })
+    .catch(function(errorMessage) {
+      /**
+       **************************************
+       * Pending: If error:
+       * Add reviews to a new store for pending reviews
+       */
+      data.updatedAt = Date.now();
+      return data;
+  });
+}
+
+
+  /**
    * Fetch restaurants by a cuisine type with proper error handling.
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
