@@ -433,8 +433,15 @@ class DBHelper {
     .catch(function(errorMessage) {
       data.updatedAt = Date.now();
       data.offline = true;
+      let savedData = {
+        'restaurant_id': data.restaurant_id,
+        'name': data.name,
+        'rating': data.rating,
+        'comments': data.comments,
+        'updatedAt': data.updatedAt
+      };
       //for any error, it will put the reviews into pending reviews object store
-      IndexedDatabase.pushPendingReviewsInformation([data]);
+      IndexedDatabase.pushPendingReviewsInformation([savedData]);
       return data;
     });
   }
