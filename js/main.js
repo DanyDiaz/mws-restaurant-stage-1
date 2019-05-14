@@ -14,8 +14,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchCuisines();
   registerServiceWorker();
   fetchAndSaveReviews();
+  addEventsForElements();
 });
 
+/**
+ * Defines several events for the html elements
+ */
+addEventsForElements = () => {
+  let btnIgnore = document.getElementById('btnIgnore');
+
+  //Add click event for ignore button
+  if(btnIgnore) {
+    btnIgnore.addEventListener('click', function() {
+      hideOfflineNotification();
+    });
+  }
+}
 /**
  * Fetch all neighborhoods and set their HTML.
  */
@@ -132,10 +146,32 @@ updateRestaurants = () => {
     if (error) { // Got an error!
       console.error(error);
     } else {
+      if(restaurants && restaurants.length > 0 && restaurants[0].offline) {
+        showOfflineNotification();
+      } else if(restaurants && restaurants.length > 0) {
+        //Send possible pending reviews
+        DBHelper.sendPendingReviews();
+        //Hide "offline" notification
+        hideOfflineNotification();
+      }
       resetRestaurants(restaurants);
       fillRestaurantsHTML();
     }
   })
+}
+
+/**
+ * Shows offline notification
+ */
+showOfflineNotification = () => {
+  document.getElementById('notification').style.display = 'flex';
+}
+
+/**
+ * Hides offline notification
+ */
+hideOfflineNotification = () => {
+  document.getElementById('notification').style.display = 'none';
 }
 
 /**

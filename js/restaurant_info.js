@@ -21,7 +21,14 @@ addEventsForElements = () => {
   let lblName = document.getElementById('lblEnterName');
   let lblComment = document.getElementById('lblEnterComment');
   let selRating = document.getElementById('sRating');
+  let btnIgnore = document.getElementById('btnIgnore');
 
+  //Add click event for ignore button
+  if(btnIgnore) {
+    btnIgnore.addEventListener('click', function() {
+      hideOfflineNotification();
+    });
+  }
   //Add keyup event for name text
   if(txtName) {
     txtName.addEventListener('keyup', function(event) {
@@ -29,7 +36,7 @@ addEventsForElements = () => {
         && txtName.value.trim().length > 0) {
         lblName.style.display = 'none';
       }
-      this.value = this.value.replace(/[^a-záA-Z0-9 ]/g, '');
+      this.value = this.value.replace(/[^a-zA-Z0-9 ]/g, '');
     });
   }
   //Add keyup event for comment textarea
@@ -53,12 +60,36 @@ addEventsForElements = () => {
           txtName.value = '';
           txtComment.value = '';
           txtName.focus();
+          //check if the review has "offline" property
+          if(review && review.offline) {
+            showOfflineNotification();
+            delete review.offline;
+          } else if(review) {
+            //Send possible pending reviews
+            DBHelper.sendPendingReviews();
+            //hide "offline" notification
+            hideOfflineNotification();
+          }
           //Add review locally
           ul.appendChild(createReviewHTML(review));
         });
       }
     });
   }
+}
+
+/**
+ * Shows offline notification
+ */
+showOfflineNotification = () => {
+  document.getElementById('notification').style.display = 'flex';
+}
+
+/**
+ * Hides offline notification
+ */
+hideOfflineNotification = () => {
+  document.getElementById('notification').style.display = 'none';
 }
 
 /**
@@ -156,8 +187,19 @@ fetchRestaurantFromURL = (callback) => {
         console.error(error);
         return;
       }
+      //if we are offline, show the adequate notification
+      if(restaurant && restaurant.offline) {
+        showOfflineNotification();
+        delete restaurant.offline;
+      }
+      else if(restaurant) {
+        //Send possible pending reviews
+        DBHelper.sendPendingReviews();
+        //Hide "offline" notification
+        hideOfflineNotification();
+      }
       fillRestaurantHTML();
-      callback(null, restaurant)
+      callback(null, restaurant);
     });
   }
 }

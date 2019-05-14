@@ -35,7 +35,8 @@ a {
 }
 a:hover, a:focus, input:hover, input:focus, textarea:hover,
 textarea:focus, #reviews-form select:hover, 
-#reviews-form select:focus {
+#reviews-form select:focus, button:hover,
+button:focus {
 	outline: 0;
   box-shadow: 0 0 5px 3px #3397db;
 	text-decoration: none;
@@ -374,6 +375,33 @@ nav h1 {
 #restaurant-hours td {
   color: #000;
   border-bottom: 1px solid #d9d9d9;
+}
+#notification {
+  position: fixed;
+  z-index: 5000;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: white;
+  background: black;
+  padding: 10px 20px;
+  opacity: 0.8;
+  display: none;
+}
+#notification:hover {
+  opacity: 1;
+}
+#notification-content {
+  max-width: 50%;
+}
+#notification button {
+  max-width: 50%;
+  background: none;
+  border: none;
+  padding: 0;
+  text-transform: uppercase;
+  color: #f18200;
+  margin-left: auto;
 }
 
 /* ================ Media Queries for Responsive Design =================== */

@@ -17,6 +17,10 @@ class IndexedDatabase {
    */
   static get reviewsObjectStoreName() { return 'reviews' }
 
+  /**
+   * ObjectStore for pending reviews.
+   */
+  static get pendingReviewsOSN() { return 'pendingreviews' }
 
   /**
    * Get all the restaurant information from IndexedDb
@@ -62,6 +66,49 @@ class IndexedDatabase {
           reject('Error getting reviews information from IndexedDB');
         }
       });
+    }).then(function(data) {
+      return new Promise((resolve, reject) => {
+        IndexedDatabase.getPendingReviewsInformation(id)
+        .then(function(pendingData) {
+          let allData = data.concat(pendingData);
+          resolve(allData); 
+        }).catch(function(errorMessage) {
+          reject(errorMessage);
+        });  
+      });
+    });
+  }
+
+  /**
+   * Get all pending reviews information from IndexedDb
+   * if an restaurant id is sent, only the reviews for that
+   * restaurant will be consulted
+   */
+  static getPendingReviewsInformation(id) {
+    if(!restaurantsdb) return Promise.resolve(null);
+
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.pendingReviewsOSN, 'readonly')
+                .objectStore(IndexedDatabase.pendingReviewsOSN);
+        let restaurantIndex = store.index('restaurant_id')
+        
+        let request;
+        if(id && id > 0) {
+          request = restaurantIndex.getAll(parseInt(id));
+        }
+        else {
+          request = restaurantIndex.getAll();
+        }
+
+        request.onsuccess = function(event) {
+          resolve(event.target.result);
+        }
+
+        request.onerror = function() {
+          reject('Error getting pending reviews information from IndexedDB');
+        }
+      });
     });
   }
 
@@ -96,6 +143,46 @@ class IndexedDatabase {
   }
 
   /**
+   * It will add information to pending reviews object store
+   * @param {Reviews information to add to IndexedDB} pendingReviews 
+   */
+  static pushPendingReviewsInformation(pendingReviews) {
+    if(!restaurantsdb) return;
+    restaurantsdb.then(function(db) {
+      let store = db.transaction(IndexedDatabase.pendingReviewsOSN, 'readwrite')
+                    .objectStore(IndexedDatabase.pendingReviewsOSN);
+      for(let review of pendingReviews) {
+        review.id = parseInt(Date.now());
+        store.put(review);
+      }
+    });
+  }
+
+  /**
+   * Clear all pending reviews from IndexedDB
+   */
+  static clearPendingReviews() {
+    if(!restaurantsdb) return Promise.resolve(null);
+
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.pendingReviewsOSN, 'readwrite')
+                .objectStore(IndexedDatabase.pendingReviewsOSN);
+        
+        let request = store.clear();
+        
+        request.onsuccess = function() {
+          resolve('Success');
+        }
+
+        request.onerror = function() {
+          reject('Error clearing Pending Reviews from IndexedDB');
+        }
+      });
+    });
+  }
+
+  /**
   * Open and Configure the database
   */
   static openAndConfigureDatabase() {
@@ -109,7 +196,12 @@ class IndexedDatabase {
           keyPath: 'id'
         });
 
+        let pendingReviewsStore = upgradeDb.createObjectStore(IndexedDatabase.pendingReviewsOSN, {
+          keyPath: 'id'
+        });
+
         reviewsStore.createIndex('restaurant_id', 'restaurant_id');
+        pendingReviewsStore.createIndex('restaurant_id', 'restaurant_id');
       });
   }
 
@@ -189,6 +281,10 @@ class DBHelper {
             callback(error, null);
           }
           else {
+            //Indicate, we are offline
+            for(let eachData of data) {
+              eachData.offline = true;
+            }
             callback(null, data);
           }
         });
@@ -210,6 +306,9 @@ class DBHelper {
         return response.json();
       })
       .then(function(restaurant) {
+        //Push restaurant information in indexeddb
+        IndexedDatabase.pushRestaurantsInformation([restaurant]);
+        //Add possible reviews
         if(reviews) {
           restaurant.reviews = reviews;
         }
@@ -224,7 +323,10 @@ class DBHelper {
             callback(error, null);
           }
           else {
-            const restaurant = data.find(r => r.id == id); 
+            const restaurant = data.find(r => r.id == id);
+            //Indicate we are offline
+            restaurant.offline = true;
+            //Add reviews of the restaurant
             if(restaurant) {
               if(reviews) {
                 restaurant.reviews = reviews;
@@ -236,7 +338,7 @@ class DBHelper {
             }
           }
         });
-        });
+      });
     });
   }
 
@@ -329,15 +431,13 @@ class DBHelper {
       return review;
     })
     .catch(function(errorMessage) {
-      /**
-       **************************************
-       * Pending: If error:
-       * Add reviews to a new store for pending reviews
-       */
       data.updatedAt = Date.now();
+      data.offline = true;
+      //for any error, it will put the reviews into pending reviews object store
+      IndexedDatabase.pushPendingReviewsInformation([data]);
       return data;
-  });
-}
+    });
+  }
 
 
   /**
@@ -455,5 +555,53 @@ class DBHelper {
       })
       marker.addTo(newMap);
     return marker;
+  }
+
+  /**
+   * When online again, it sends pending reviews to server
+   */
+  static sendPendingReviews() {
+    //Get all the pending reviews
+    IndexedDatabase.getPendingReviewsInformation()
+    .then(function(pendingReviews) {
+      if(pendingReviews && pendingReviews.length > 0) {
+        //Clear the pending reviews object store (to avoid duplicates)
+        IndexedDatabase.clearPendingReviews()
+        .then(function(message) {
+          //for each review, try to post them again to the server
+          for(let review of pendingReviews) {
+            let newData = {
+              'restaurant_id': review.restaurant_id,
+              'name': review.name,
+              'rating': review.rating,
+              'comments': review.comments
+            }
+
+            fetch(DBHelper.REVIEWS_PATH, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(newData)
+            })
+            .then(function(response) {
+              if(!response.ok)
+                  throw Error(response.statusText);
+              return;
+            })
+            .then(function() {
+              //Get again the reviews from the restaurant to update new review
+              DBHelper.fetchReviewsByRestaurant(parseInt(review.restaurant_id));
+              return;
+            })
+            .catch(function(errorMessage) {
+              //for any error, it will put the reviews into pending reviews object store again
+              IndexedDatabase.pushPendingReviewsInformation([review]);
+              return;
+            });
+          }
+        });
+      }
+    });
   }
 }
