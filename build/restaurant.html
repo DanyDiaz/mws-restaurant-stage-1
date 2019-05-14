@@ -56,11 +56,34 @@
       <!-- end restaurant -->
       <!-- Beginning reviews -->
       <div class="div-reviews-container">
+        <section id="reviews-form">
+          <h3>Write your review</h3>
+          <label for="txtUserName">Name</label>
+          <input type="text" id="txtUserName" />
+          <label class="missing-data" id="lblEnterName">Please, enter your name</label>
+          <br><label for="sRating">Rating</label>
+          <select id="sRating">
+            <option selected="selected" value="5">5 (Excellent)</option>
+            <option value="4">4 (Good)</option>
+            <option value="3">3 (Fine)</option>
+            <option value="2">2 (Bad)</option>
+            <option value="1">1 (Very bad)</option>
+          </select>
+          <br><label for="txtComment">Comment</label>
+          <br><textarea id="txtComment"></textarea>
+          <label class="missing-data" id="lblEnterComment">Please, enter your comment</label>
+          <input type="submit" value="Send" id="butSend">
+        </section>  
         <section id="reviews-container">
+          <h3>Reviews</h3>
           <ul id="reviews-list"></ul>
         </section>
       </div>
       <!-- End reviews -->
+    </div>
+    <div id="notification" class="flex-container">
+      <div id="notification-content">We are offline for the moment...</div>
+      <button id="btnIgnore">Ignore</button>
     </div>
   </main>
   <!-- End main -->
