@@ -446,6 +446,49 @@ class DBHelper {
     });
   }
 
+  /**
+   * It will create the fetch put request to indicate whether
+   * a restaurant is a favorite one or not.
+   */
+  static markRestaurantAsFavorite(restaurantId, isFavorite) {
+    let strFavorite = 'false';
+    if(isFavorite) {
+      strFavorite = 'true';
+    }
+
+    return fetch(DBHelper.RESTAURANTS_PATH + '/' + restaurantId + '/?is_favorite=' + strFavorite, {
+      method: 'PUT'
+    })
+    .then(function(response) {
+      if(!response.ok)
+          throw Error(response.statusText);
+        return;
+    })
+    .then(function() {
+      /************************ update the favorite property of the restaurant in IndexedDB
+       * DBHelper.fetchReviewsByRestaurant(restaurantId);
+       */
+      return;
+    })
+    .catch(function(errorMessage) {
+      /******************
+       * 1. Push the put request into indexedDB
+       * 2. Also update restaurants information with the newest state
+      data.updatedAt = Date.now();
+      data.offline = true;
+      let savedData = {
+        'restaurant_id': data.restaurant_id,
+        'name': data.name,
+        'rating': data.rating,
+        'comments': data.comments,
+        'updatedAt': data.updatedAt
+      };
+      //for any error, it will put the reviews into pending reviews object store
+      IndexedDatabase.pushPendingReviewsInformation([savedData]);
+       */
+      return;
+    });
+  }
 
   /**
    * Fetch restaurants by a cuisine type with proper error handling.

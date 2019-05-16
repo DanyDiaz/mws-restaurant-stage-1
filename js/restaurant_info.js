@@ -22,11 +22,23 @@ addEventsForElements = () => {
   let lblComment = document.getElementById('lblEnterComment');
   let selRating = document.getElementById('sRating');
   let btnIgnore = document.getElementById('btnIgnore');
+  let chkMarkFavorite = document.getElementById('chkMarkFavorite');
 
   //Add click event for ignore button
   if(btnIgnore) {
     btnIgnore.addEventListener('click', function() {
       hideOfflineNotification();
+    });
+  }
+  //Add click event for ignore button
+  if(chkMarkFavorite) {
+    chkMarkFavorite.addEventListener('click', function() {
+      let restaurantId = getParameterByName('id');
+      let isFavorite = false;
+      if(this.checked) {
+        isFavorite = true;
+      }
+      DBHelper.markRestaurantAsFavorite(restaurantId, isFavorite);
     });
   }
   //Add keyup event for name text
@@ -220,6 +232,10 @@ createSources = (sourceInfo) => {
 fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
+
+  if(restaurant.is_favorite == 'true') {
+    document.getElementById('chkMarkFavorite').checked = true;
+  }
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;

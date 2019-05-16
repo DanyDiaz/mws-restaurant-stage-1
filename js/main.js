@@ -251,6 +251,22 @@ createRestaurantHTML = (restaurant) => {
   address.innerHTML = restaurant.address;
   li.append(address);
 
+  const isFavorite = document.createElement('p');
+  const newLine = document.createElement('br');
+  const italicMessage = document.createElement('i');
+  italicMessage.innerHTML = 'Is a favorite restaurant? ';
+  const boldMessage = document.createElement('b');
+  if(restaurant.is_favorite == 'true') {
+    boldMessage.innerHTML = 'Yes';
+  }
+  else {
+    boldMessage.innerHTML = 'No';
+  }
+  italicMessage.append(boldMessage);
+  isFavorite.append(italicMessage);
+  li.append(newLine);
+  li.append(isFavorite);
+
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
