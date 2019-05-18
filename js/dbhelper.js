@@ -21,11 +21,16 @@ class IndexedDatabase {
    * ObjectStore for pending reviews.
    */
   static get pendingReviewsOSN() { return 'pendingreviews' }
+  
+  /**
+   * ObjectStore for pending reviews.
+   */
+  static get pendingFavoriteRestsOSN() { return 'pendingfavoriterests' }
 
   /**
    * Get all the restaurant information from IndexedDb
    */
-  static getRestaurantsInformation() {
+  static getRestaurantsInformation(id) {
     if(!restaurantsdb) return Promise.resolve(null);
     
     return new Promise((resolve, reject) => {
@@ -33,7 +38,13 @@ class IndexedDatabase {
         let store = db.transaction(IndexedDatabase.restaurantsObjectStoreName, 'readonly')
                 .objectStore(IndexedDatabase.restaurantsObjectStoreName);
 
-        let request = store.getAll();
+        let request;
+        if(id && id > 0) {
+          request = store.getAll(parseInt(id));
+        }
+        else {
+          request = store.getAll();
+        }
         request.onsuccess = function(event) {
           resolve(event.target.result);
         }
@@ -113,6 +124,30 @@ class IndexedDatabase {
   }
 
   /**
+   * Get all pending "mark/unmark as favorite" requests from IndexedDB
+   */
+  static getPendingFavoriteRequests() {
+    if(!restaurantsdb) return Promise.resolve(null);
+
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.pendingFavoriteRestsOSN, 'readonly')
+                .objectStore(IndexedDatabase.pendingFavoriteRestsOSN);
+        
+        let request = store.getAll();
+        
+        request.onsuccess = function(event) {
+          resolve(event.target.result);
+        }
+
+        request.onerror = function() {
+          reject('Error getting pending "favorite" requests from IndexedDB');
+        }
+      });
+    });
+  }
+
+  /**
    * It will add information to restaurants object store that was fetched from another server
    * @param {Restaurants information to add to IndexedDB} restaurants 
    */
@@ -159,6 +194,21 @@ class IndexedDatabase {
   }
 
   /**
+   * It will add information to pending "favorite" requests object store
+   * @param {Favorite information to add to IndexedDB} pendingFavoriteRests 
+   */
+  static pushPendingFavoriteInformation(pendingFavoriteRests) {
+    if(!restaurantsdb) return;
+    restaurantsdb.then(function(db) {
+      let store = db.transaction(IndexedDatabase.pendingFavoriteRestsOSN, 'readwrite')
+                    .objectStore(IndexedDatabase.pendingFavoriteRestsOSN);
+      for(let pendingFavoriteInf of pendingFavoriteRests) {
+        store.put(pendingFavoriteInf);
+      }
+    });
+  }
+
+  /**
    * Clear all pending reviews from IndexedDB
    */
   static clearPendingReviews() {
@@ -183,6 +233,30 @@ class IndexedDatabase {
   }
 
   /**
+   * Clear all pending "favorite" information from IndexedDB
+   */
+  static clearPendingFavoriteInformation() {
+    if(!restaurantsdb) return Promise.resolve(null);
+
+    return new Promise((resolve, reject) => {
+      restaurantsdb.then(function(db) {
+        let store = db.transaction(IndexedDatabase.pendingFavoriteRestsOSN, 'readwrite')
+                .objectStore(IndexedDatabase.pendingFavoriteRestsOSN);
+        
+        let request = store.clear();
+        
+        request.onsuccess = function() {
+          resolve('Success');
+        }
+
+        request.onerror = function() {
+          reject('Error clearing pending favorite information from IndexedDB');
+        }
+      });
+    });
+  }
+
+  /**
   * Open and Configure the database
   */
   static openAndConfigureDatabase() {
@@ -197,6 +271,10 @@ class IndexedDatabase {
         });
 
         let pendingReviewsStore = upgradeDb.createObjectStore(IndexedDatabase.pendingReviewsOSN, {
+          keyPath: 'id'
+        });
+
+        upgradeDb.createObjectStore(IndexedDatabase.pendingFavoriteRestsOSN, {
           keyPath: 'id'
         });
 
@@ -269,8 +347,25 @@ class DBHelper {
         return response.json();
       })
       .then(function(restaurants) {
-        callback(null, restaurants);
-        IndexedDatabase.pushRestaurantsInformation(restaurants);        
+        //Update favorite information got from pending "favorite" requests
+        IndexedDatabase.getPendingFavoriteRequests()
+        .then(function(data) {
+          if(data && data.length > 0) {
+            for(let favorite of data) {
+              restaurants
+                .find(aRestaurant => parseInt(aRestaurant.id) == parseInt(favorite.id))
+                  .is_favorite = favorite.is_favorite;
+            }
+            DBHelper.sendPendingFavoriteRequests();
+          }
+          callback(null, restaurants);
+          IndexedDatabase.pushRestaurantsInformation(restaurants);
+        })
+        .catch(function() {
+          //for any error getting pending "favorite" requests from IndexedDB, return data anyway
+          callback(null, restaurants);
+          IndexedDatabase.pushRestaurantsInformation(restaurants);
+        });        
       })
       .catch(function(errorStatus) {
         //If there was an error fetching data from server, it will be fetched from IndexedDB
@@ -306,13 +401,25 @@ class DBHelper {
         return response.json();
       })
       .then(function(restaurant) {
-        //Push restaurant information in indexeddb
-        IndexedDatabase.pushRestaurantsInformation([restaurant]);
-        //Add possible reviews
-        if(reviews) {
-          restaurant.reviews = reviews;
-        }
-        callback(null, restaurant);
+        //Update favorite information got from pending "favorite" requests
+        IndexedDatabase.getPendingFavoriteRequests()
+        .then(function(data) {
+          if(data && data.length > 0) {
+            for(let favorite of data) {
+              if(parseInt(favorite.id) == parseInt(restaurant.id)) {
+                restaurant.is_favorite = favorite.is_favorite;
+              }
+            }
+            DBHelper.sendPendingFavoriteRequests();
+          }
+          //Push restaurant information in indexeddb
+          IndexedDatabase.pushRestaurantsInformation([restaurant]);
+          //Add possible reviews
+          if(reviews) {
+            restaurant.reviews = reviews;
+          }
+          callback(null, restaurant);
+        });
       })
       .catch(function(errorStatus) {
         //If there was an error fetching the restaurant from server, it will be fetched from IndexedDB
@@ -376,11 +483,15 @@ class DBHelper {
   static fetchReviews() {
     fetch(DBHelper.REVIEWS_PATH)
       .then(function(response) {
-        if(response.ok)
-          return response.json();
+        if(!response.ok)
+          throw Error(response.statusText);
+        return response.json();
       })
       .then(function(reviews) {
         IndexedDatabase.pushReviewsInformation(reviews);
+      })
+      .catch(function(message) {
+        return;
       });
   }
 
@@ -462,31 +573,37 @@ class DBHelper {
     .then(function(response) {
       if(!response.ok)
           throw Error(response.statusText);
-        return;
+        return null;
     })
     .then(function() {
-      /************************ update the favorite property of the restaurant in IndexedDB
-       * DBHelper.fetchReviewsByRestaurant(restaurantId);
-       */
-      return;
+      //Get restaurant information from IndexedDB...
+      IndexedDatabase.getRestaurantsInformation(parseInt(restaurantId))
+      .then(function(data) {
+        if(data && data.length == 1) {
+          data[0].is_favorite = isFavorite;
+          //Update the "is_favorite" property
+          IndexedDatabase.pushRestaurantsInformation(data);
+        }
+      });
+      return null;
     })
     .catch(function(errorMessage) {
-      /******************
-       * 1. Push the put request into indexedDB
-       * 2. Also update restaurants information with the newest state
-      data.updatedAt = Date.now();
-      data.offline = true;
-      let savedData = {
-        'restaurant_id': data.restaurant_id,
-        'name': data.name,
-        'rating': data.rating,
-        'comments': data.comments,
-        'updatedAt': data.updatedAt
-      };
-      //for any error, it will put the reviews into pending reviews object store
-      IndexedDatabase.pushPendingReviewsInformation([savedData]);
-       */
-      return;
+      let saveData = {id: parseInt(restaurantId),
+        is_favorite: isFavorite};
+      //for any error, it will put the "favorite" requests into favorite rests object store
+      IndexedDatabase.pushPendingFavoriteInformation([saveData]);
+      
+      //Get restaurant information from IndexedDB...
+      IndexedDatabase.getRestaurantsInformation(parseInt(restaurantId))
+      .then(function(data) {
+        if(data && data.length == 1) {
+          data[0].is_favorite = isFavorite;
+          //Update the "is_favorite" property
+          IndexedDatabase.pushRestaurantsInformation(data);
+        }
+      });
+      //Indicate we are offline
+      return {offline: true};
     });
   }
 
@@ -647,6 +764,41 @@ class DBHelper {
             .catch(function(errorMessage) {
               //for any error, it will put the reviews into pending reviews object store again
               IndexedDatabase.pushPendingReviewsInformation([review]);
+              return;
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * When online again, it sends pending "favorite" requests to server
+   */
+  static sendPendingFavoriteRequests() {
+    //Get all the pending "favorite" requests
+    IndexedDatabase.getPendingFavoriteRequests()
+    .then(function(pendingFavoriteInf) {
+      if(pendingFavoriteInf && pendingFavoriteInf.length > 0) {
+        //Clear the pending "favorite" requests object store (to avoid duplicates)
+        IndexedDatabase.clearPendingFavoriteInformation()
+        .then(function(message) {
+          //for each review, try to post them again to the server
+          for(let favorite of pendingFavoriteInf) {
+            fetch(DBHelper.RESTAURANTS_PATH + '/' + favorite.id + '/?is_favorite=' + favorite.is_favorite, {
+              method: 'PUT'
+            })
+            .then(function(response) {
+              if(!response.ok)
+                  throw Error(response.statusText);
+              return;
+            })
+            .then(function() {
+              return;
+            })
+            .catch(function(errorMessage) {
+              //for any error, it will put the reviews into pending reviews object store again
+              IndexedDatabase.pushPendingReviewsInformation([favorite]);
               return;
             });
           }

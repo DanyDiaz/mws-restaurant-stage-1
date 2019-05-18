@@ -256,7 +256,7 @@ createRestaurantHTML = (restaurant) => {
   const italicMessage = document.createElement('i');
   italicMessage.innerHTML = 'Is a favorite restaurant? ';
   const boldMessage = document.createElement('b');
-  if(restaurant.is_favorite == 'true') {
+  if(restaurant.is_favorite && JSON.parse(restaurant.is_favorite)) {
     boldMessage.innerHTML = 'Yes';
   }
   else {

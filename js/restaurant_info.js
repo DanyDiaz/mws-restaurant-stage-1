@@ -36,7 +36,11 @@ addEventsForElements = () => {
       let restaurantId = getParameterByName('id');
       let isFavorite = false;
       if(this.checked) {
+        document.getElementById('lblMarkFavorite').firstChild.innerHTML = 'Unmark as Favorite&nbsp';
         isFavorite = true;
+      }
+      else {
+        document.getElementById('lblMarkFavorite').firstChild.innerHTML = 'Mark as Favorite&nbsp';
       }
       DBHelper.markRestaurantAsFavorite(restaurantId, isFavorite);
     });
@@ -233,8 +237,9 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
 
-  if(restaurant.is_favorite == 'true') {
+  if(restaurant.is_favorite && JSON.parse(restaurant.is_favorite)) {
     document.getElementById('chkMarkFavorite').checked = true;
+    document.getElementById('lblMarkFavorite').firstChild.innerHTML = 'Unmark as Favorite&nbsp';
   }
 
   const address = document.getElementById('restaurant-address');
