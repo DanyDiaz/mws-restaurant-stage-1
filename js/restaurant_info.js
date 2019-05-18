@@ -203,19 +203,27 @@ fetchRestaurantFromURL = (callback) => {
         console.error(error);
         return;
       }
-      //if we are offline, show the adequate notification
-      if(restaurant && restaurant.offline) {
-        showOfflineNotification();
-        delete restaurant.offline;
-      }
-      else if(restaurant) {
-        //Send possible pending reviews
-        DBHelper.sendPendingReviews();
-        //Hide "offline" notification
-        hideOfflineNotification();
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant);
+      //Get pending reviews to attach them to the restaurant in case we are online again
+      IndexedDatabase.getPendingReviewsInformation(parseInt(id))
+      .then(function(offlineReviews) {
+        //if we are offline, show the adequate notification
+        if(restaurant && restaurant.offline) {
+          showOfflineNotification();
+          delete restaurant.offline;
+        }
+        else if(restaurant) {
+            //If we are online again, attach to the restaurant all the reviews that has not been sent yet.
+            if(offlineReviews && offlineReviews.length > 0) {
+              restaurant.reviews = restaurant.reviews.concat(offlineReviews);
+            }
+            //Send possible pending reviews
+            DBHelper.sendPendingReviews();
+            //Hide "offline" notification
+            hideOfflineNotification();
+        }
+        fillRestaurantHTML();
+        callback(null, restaurant);
+      });
     });
   }
 }
